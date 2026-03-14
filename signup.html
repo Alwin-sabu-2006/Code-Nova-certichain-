@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Organization Signup</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial;
+    background:#020d1f;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.login-container{
+    text-align:center;
+}
+
+.title{
+    font-family:'Orbitron', sans-serif;
+    font-size:40px;
+    letter-spacing:8px;
+    font-weight:700;
+}
+
+.subtitle{
+    color:#ffd400;
+    letter-spacing:4px;
+    margin-bottom:40px;
+}
+
+.c1{
+    color:#00eaff;
+    text-shadow:0 0 10px #00eaff;
+}
+
+.c2{
+    color:#ffd400;
+    text-shadow:0 0 10px #ffd400;
+}
+
+.signup-box{
+    width:420px;
+    padding:40px;
+    border:1px solid #1b3b63;
+    border-radius:10px;
+    background:#061833;
+}
+
+h2{
+    color:#00eaff;
+    text-align:center;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    background:#061833;
+    border:1px solid #1b3b63;
+    color:white;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin-top:20px;
+    background:#00eaff;
+    border:none;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#00c9d8;
+}
+
+.login-link{
+    margin-top:15px;
+    font-size:14px;
+    text-align:center;
+}
+
+.login-link a{
+    color:#ffd400;
+    text-decoration:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-container">
+
+<h1 class="title">
+<span class="c1">C</span>
+<span class="c1">E</span>
+<span class="c1">R</span>
+<span class="c1">T</span>
+<span class="c2">C</span>
+<span class="c2">H</span>
+<span class="c2">A</span>
+<span class="c2">I</span>
+<span class="c2">N</span>
+</h1>
+
+<p class="subtitle">NFT CERTIFICATE VERIFICATION</p>
+
+<div class="signup-box">
+
+<h2>Organization Signup</h2>
+
+<input type="text" id="orgName" placeholder="Organization Name">
+
+<input type="email" id="email" placeholder="Email">
+
+<input type="text" id="website" placeholder="Website">
+
+<input type="password" id="password" placeholder="Password">
+
+<button onclick="createAccount()">Create Organization Account</button>
+
+<div class="login-link">
+Already have an account? <a href="login.html">Log In</a>
+</div>
+
+</div>
+</div>
+
+<script>
+window.createAccount = async function(){
+
+let orgName = document.getElementById("orgName").value;
+let email = document.getElementById("email").value;
+let website = document.getElementById("website").value;
+let password = document.getElementById("password").value;
+
+if(orgName === "" || email === "" || website === "" || password === ""){
+    alert("Please fill all fields");
+    return;
+}
+
+try {
+
+const resp = await fetch('http://localhost:3000/api/org', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ orgName, email, website, password })
+});
+
+const data = await resp.json();
+
+if (!resp.ok) {
+throw new Error(data && data.error ? data.error : 'Server error');
+}
+
+alert('Organization account created successfully!');
+console.log('Created org id:', data.id);
+window.location.href = 'login.html'; // Redirect to login page
+
+} catch (err) {
+
+console.error('Error creating org:', err);
+alert('Failed to create organization: ' + err.message);
+
+}
+
+};
+</script>
+
+</body>
+</html>

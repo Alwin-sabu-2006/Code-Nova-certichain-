@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CertChain — Verify Certificate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #04080f; --surface: #0a1628; --surface2: #0d1e36; --border: #1e3a5f;
+      --cyan: #00f0ff; --gold: #ffe135; --green: #00ff9d; --text: #eaf6ff; --muted: #5a8ab0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif;}
+    body { background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; flex-direction: column; }
+    
+    #bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(0, 255, 157, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 157, 0.04) 1px, transparent 1px); background-size: 60px 60px; animation: gridDrift 20s linear infinite; pointer-events: none; z-index: 0; }
+    @keyframes gridDrift { from { background-position: 0 0; } to { background-position: 60px 60px; } }
+    
+    .verify-card { background: var(--surface); border: 1px solid var(--border); padding: 50px; width: 500px; position: relative; z-index: 10; box-shadow: 0 20px 60px rgba(0, 255, 157, .08); text-align: center; }
+    .verify-card::before { content: ''; position: absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, var(--cyan), var(--green)); }
+    
+    .logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--cyan); margin-bottom: 10px; letter-spacing: 4px; cursor: pointer; transition: 0.3s; }
+    .logo:hover { text-shadow: 0 0 20px rgba(0, 240, 255, 0.5); }
+    .logo span { color: var(--gold); }
+    .title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; color: var(--text); margin-bottom: 10px; letter-spacing: 2px; }
+    .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 30px; line-height: 1.6; }
+    
+    .field { margin-bottom: 20px; text-align: left; }
+    .field label { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; display: block; margin-bottom: 8px; }
+    .field input { width: 100%; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 14px 16px; outline: none; transition: border-color .3s; font-size: 14px; font-family: 'Space Mono', monospace; }
+    .field input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.1); }
+    
+    .btn { width: 100%; padding: 16px; background: var(--green); color: var(--bg); font-family: 'Space Mono', monospace; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; border: none; cursor: pointer; transition: 0.3s; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px;}
+    .btn:hover { box-shadow: 0 0 25px rgba(0, 255, 157, 0.4); transform: translateY(-2px);}
+    
+    .links { margin-top: 24px; font-size: 13px; color: var(--muted); }
+    .links a { color: var(--green); text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+
+    /* Verification Results */
+    .result-box { display: none; margin-top: 30px; padding: 20px; border: 1px solid var(--green); background: rgba(0, 255, 157, 0.05); text-align: left; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .result-box.active { display: block; }
+    .rb-header { color: var(--green); font-family: 'Space Mono', monospace; font-size: 12px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .rb-row { display: flex; flex-direction: column; margin-bottom: 12px; }
+    .rb-row:last-child { margin-bottom: 0; }
+    .rb-label { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .rb-value { font-size: 14px; color: var(--text); font-weight: 500;}
+  </style>
+</head>
+<body>
+  <div id="bg"></div>
+  
+  <div class="verify-card">
+    <div class="logo" onclick="window.location.href='index.html'">CERT<span>CHAIN</span></div>
+    <div class="title">Verify Certificate</div>
+    <div class="subtitle">Enter a unique Certificate ID or Transaction Hash to verify its authenticity on the blockchain.</div>
+    
+    <div class="field">
+      <label>Certificate ID / Blockchain Hash</label>
+      <input type="text" id="certId" placeholder="e.g. 0x3f9a...d812" autocomplete="off">
+    </div>
+    
+    <button class="btn" id="verifyBtn" onclick="runVerification()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      Verify on Blockchain
+    </button>
+    
+    <div class="result-box" id="resultBox">
+      <div class="rb-header">✓ Authentic Certificate Found</div>
+      <div class="rb-row">
+        <span class="rb-label">Recipient Name</span>
+        <span class="rb-value" id="resName">—</span>
+      </div>
+      <div class="rb-row">
+        <span class="rb-label">Credential / Achievement</span>
+        <span class="rb-value" id="resCourse">—</span>
+      </div>
+      <div class="rb-row">
+        <span class="rb-label">Issue Date</span>
+        <span class="rb-value" id="resDate">—</span>
+      </div>
+      <div class="rb-row">
+        <span class="rb-label">Smart Contract Issuer</span>
+        <span class="rb-value" style="font-family:'Space Mono', monospace; font-size: 11px; color:var(--cyan)">0x7F3A9C2D1E8B4F5A6C7D</span>
+      </div>
+    </div>
+
+    <div class="links">
+      <a href="index.html">← Back to Homepage</a>
+    </div>
+  </div>
+
+  <script>
+    function runVerification() {
+      const input = document.getElementById('certId').value.trim();
+      if(!input) {
+        alert('Please enter a Certificate ID or Hash.');
+        return;
+      }
+      
+      const btn = document.getElementById('verifyBtn');
+      btn.textContent = 'Scanning Blockchain...';
+      btn.style.opacity = '0.7';
+      document.getElementById('resultBox').classList.remove('active');
+      
+      // Simulate a network delay for visual effect
+      setTimeout(() => {
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Verify Another';
+        btn.style.opacity = '1';
+        
+        // Populate dummy blockchain data
+        document.getElementById('resName').textContent = 'Satoshi Nakamoto';
+        document.getElementById('resCourse').textContent = 'Advanced Web3 & Solidity Bootcamp';
+        document.getElementById('resDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        
+        document.getElementById('resultBox').classList.add('active');
+      }, 1500);
+    }
+  </script>
+</body>
+</html>
