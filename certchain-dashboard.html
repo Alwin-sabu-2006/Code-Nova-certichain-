@@ -642,16 +642,16 @@
       <div class="card-corner"></div>
       <div class="profile-inner">
         <div class="avatar">
-          AK
+          <span id="userInitials">AK</span>
           <div class="avatar-ring"></div>
         </div>
         <div class="profile-info">
-          <div class="profile-name">Arjun Kumar</div>
+          <div class="profile-name" id="userName">Arjun Kumar</div>
           <div class="profile-id">UID // 0x7F3A9C2D1E8B</div>
           <div class="profile-meta">
             <div class="meta-item">
               <span class="meta-label">Email</span>
-              <span class="meta-value">arjun.kumar@techcorp.in</span>
+              <span class="meta-value" id="userEmail">arjun.kumar@techcorp.in</span>
             </div>
             <div class="meta-item">
               <span class="meta-label">Member Since</span>
@@ -879,51 +879,6 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const userDataString = localStorage.getItem('certchainUser');
-
-    // If no user is logged in, redirect to the login page
-    if (!userDataString) {
-      window.location.href = 'login.html';
-      return;
-    }
-
-    const user = JSON.parse(userDataString);
-    const email = user.email || 'user@example.com';
-
-    // --- Derive name and initials from email ---
-    let name = 'User';
-    let initials = 'U';
-    const emailPrefix = email.split('@')[0];
-
-    if (emailPrefix) {
-      // Capitalize parts of the name separated by dots or dashes
-      name = emailPrefix.replace(/[._-]/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
-    }
-
-    const nameParts = name.split(' ');
-    if (nameParts.length > 1 && nameParts[1]) {
-      initials = nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0);
-    } else if (name.length > 1) {
-      initials = name.substring(0, 2).toUpperCase();
-    } else {
-      initials = name.charAt(0).toUpperCase();
-    }
-
-    // --- Generate a consistent User ID from email ---
-    let hash = 0;
-    for (let i = 0; i < email.length; i++) {
-        hash = email.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const userId = '0x' + (hash >>> 0).toString(16).toUpperCase().padStart(8, '0') + '1E8B';
-
-    // --- Update the DOM with the new user details ---
-    document.querySelector('.avatar').innerHTML = `${initials}<div class="avatar-ring"></div>`;
-    document.querySelector('.profile-name').textContent = name;
-    document.querySelector('.profile-id').textContent = `UID // ${userId}`;
-    document.querySelector('.profile-meta .meta-item:nth-child(1) .meta-value').textContent = email;
-  });
-
   // Starfield
   const container = document.getElementById('stars');
   for (let i = 0; i < 120; i++) {
@@ -963,16 +918,35 @@
   }
   function logout() {
     if (confirm('Log out of CertChain?')) {
-      // Clear user data from storage on logout
-      localStorage.removeItem('certchainUser');
-
       document.body.style.opacity = '0';
       document.body.style.transition = 'opacity 0.5s';
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 500); // Wait for fade-out animation
+      localStorage.removeItem('certchainUser'); // Clear the session
+      setTimeout(() => window.location.href = 'login.html', 500); // Redirect to login
     }
   }
+
+  // Load user data from localStorage and update the dashboard
+  window.addEventListener('DOMContentLoaded', () => {
+    const storedUser = localStorage.getItem('certchainUser');
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      if (userData.email) {
+        const emailOrUsername = userData.email;
+        document.getElementById('userEmail').textContent = emailOrUsername;
+        
+        // Format display name from email (e.g., "arjun.kumar@techcorp.in" -> "Arjun Kumar")
+        let namePart = emailOrUsername.split('@')[0];
+        let formattedName = namePart.split(/[._-]/).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+        document.getElementById('userName').textContent = formattedName;
+        
+        // Generate and set initials (e.g., "Arjun Kumar" -> "AK")
+        let nameWords = formattedName.split(' ');
+        let initials = nameWords.length > 1 ? (nameWords[0].charAt(0) + nameWords[1].charAt(0)) : formattedName.substring(0, 2);
+        document.getElementById('userInitials').textContent = initials.toUpperCase();
+      }
+    }
+  });
+
   // Close modal on backdrop click
   document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
